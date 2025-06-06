@@ -73,30 +73,33 @@ EOF
 }
 
         stage('Health Check on Bastion') {
-            steps {
-                echo "🩺 Running health check..."
-                withCredentials([sshUserPrivateKey(credentialsId: 'testing', keyFileVariable: "keyf", usernameVariable: 'username')]) {
-                    sh """
+                steps {
+                        echo "🩺 Running health check..."
+                        withCredentials([sshUserPrivateKey(credentialsId: 'testing', keyFileVariable: "keyf", usernameVariable: 'username')]) {
+                sh """
+                        ssh-keyscan -H ${BASTION_IP} >> ~/.ssh/known_hosts
                         ssh -i $keyf $username@${BASTION_IP} << EOF
+#!/bin/bash
 set -x
+echo "⏳ Waiting for container to be healthy..."
 retries=10
 for i in \$(seq 1 \$retries); do
-RESPONSE_CODE=\$(curl -o /dev/null -s -w "%{http_code}" http://localhost:${DOCKER_PORT})
-if [[ "\$RESPONSE_CODE" == "200" ]]; then
-echo "✅ Nginx is serving correctly!"
+RESPONSE_CODE=`curl -o /dev/null -s -w "%{http_code}\n" http://localhost:${DOCKER_PORT}`
+if [[ "\\\$RESPONSE_CODE" == 200 ]]; then
+echo "✅ App is running!"
 exit 0
 else
-echo "Retry \$i/\$retries - Waiting..."
+echo "Retry \$i/\$retries - App not ready yet."
 sleep 5
 fi
 done
-echo "❌ Nginx not responding."
+echo "❌ App did not start properly."
 exit 1
 EOF
-                    """
-                }
-            }
+            """
         }
+    }
+}
 
         stage('Success Confirmation') {
             steps {
