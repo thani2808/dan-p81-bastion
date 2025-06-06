@@ -42,8 +42,8 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                     sh """
-                        echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
-                        docker tag ${IMAGE_NAME} ${DOCKERHUB_REPO}:latest
+                        echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin
+			docker tag ${IMAGE_NAME} ${DOCKERHUB_REPO}:latest
                         docker push ${DOCKERHUB_REPO}:latest
                         docker logout
                     """
