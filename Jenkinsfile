@@ -51,23 +51,26 @@ pipeline {
             }
         }
 
-        stage('SSH to Bastion and Run Nginx Container') {
-            steps {
-                echo "🚀 Deploying Nginx container on Bastion..."
-                withCredentials([sshUserPrivateKey(credentialsId: 'testing', keyFileVariable: "keyf", usernameVariable: 'username')]) {
-                    sh """
-                        ssh-keyscan -H ${BASTION_IP} >> ~/.ssh/known_hosts
-                        ssh -i $keyf ${username}@${BASTION_IP} << EOF
+	stage('SSH to Bastion and Run Nginx Container') {
+	    steps {
+	        echo "🚀 Deploying Nginx container on Bastion..."
+	        withCredentials([sshUserPrivateKey(credentialsId: 'testing', keyFileVariable: "keyf", usernameVariable: 'username')]) {
+        	    sh """
+	                ssh-keyscan -H ${BASTION_IP} >> ~/.ssh/known_hosts
+	                ssh -i $keyf ${username}@${BASTION_IP} << EOF
+echo "🔧 Cleaning old Docker container..."
 docker stop ${CONTAINER_NAME} || true
 docker rm ${CONTAINER_NAME} || true
 docker rmi ${DOCKERHUB_REPO}:latest || true
+echo "📥 Pulling latest image from DockerHub..."
 docker pull ${DOCKERHUB_REPO}:latest
-docker run -d --name ${CONTAINER_NAME} -p ${HOST_PORT}:${DOCKER_PORT} ${DOCKERHUB_REPO}:latest
+echo "🚀 Running container with port mapping ${HOST_PORT}:80 ..."
+docker run -d --name ${CONTAINER_NAME} -p ${HOST_PORT}:80 ${DOCKERHUB_REPO}:latest
 EOF
-                    """
-                }
-            }
+            """
         }
+    }
+}
 
         stage('Health Check on Bastion') {
             steps {
