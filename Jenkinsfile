@@ -85,7 +85,7 @@ echo "⏳ Waiting for container to be healthy..."
 retries=10
 for i in \$(seq 1 \$retries); do
 RESPONSE_CODE=`curl -o /dev/null -s -w "%{http_code}\n" http://localhost:${DOCKER_PORT}`
-if [[ "\\\$RESPONSE_CODE" == 200 ]]; then
+if [[ "\$RESPONSE_CODE" == 200 ]]; then
 echo "✅ App is running!"
 exit 0
 else
